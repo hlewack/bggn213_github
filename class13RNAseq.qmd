@@ -1,0 +1,155 @@
+---
+title: "class13RNAseq"
+format: pdf
+editor: visual
+author: hannah lewack
+---
+
+## Working with RNAseq Data
+
+today we will work with bulk RNAseq data from Himes et al ("RNA-Seq transcriptome profiling identifies CRISPLD2 as a glucocorticoid responsive gene that modulates cytokine function in airway smooth muscle cells") where four different ASM cell lines were treated with dexamethasone glucocorticoid.
+
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", row.names=1)
+metadata <- read.csv("airway_metadata.csv")
+head(counts)
+head(metadata)
+nrow(counts)
+table(metadata$dex)
+```
+
+Q1: How many genes are in this dataset? 38694
+
+Q2How many ‘control’ cell lines do we have? 4
+
+to look at the effect of this drug I want to look at control vs treatment
+
+1.  lets split the count data into control.counts and treated.counts
+
+```{r}
+control.inds<- metadata$dex == "control"
+control.counts<-counts[, control.inds]
+control.counts
+```
+
+```{r}
+treated.counts<-counts[, metadata$dex== "treated"]
+treated.counts
+```
+
+lets find the calculated average of counts per gene for control and treated. I can use the lapply function to apply mean() over the rows or columns of any data frame
+
+```{r}
+control.counts
+control.mean<- apply(control.counts, 1, mean)
+treated.mean<- apply(treated.counts, 1, mean)
+meancounts <- data.frame(control.mean, treated.mean)
+plot(meancounts[,1],meancounts[,2], xlab="Control", ylab="Treated")
+plot(meancounts, log="xy")
+```
+
+why log? it makes things easier to comprehend. if you had 10 as a count value for both treated and control the log fold change would be 0 which makes sense because there is no change in expression
+
+```{r}
+log2(10/10)
+log2(20/10)
+log2(10/20)
+```
+
+lets calculate log2fold change of the drug and add it to our table
+
+```{r}
+meancounts$log2fc<- log2(meancounts$treated.mean/meancounts$control.mean)
+head(meancounts)
+#assigns value of 0 to true and 1 to false, you can then use these values to filter out anything with 0
+to.rm<-rowSums(meancounts[,1:2]==0)>0
+mycounts<-meancounts[!to.rm,]
+nrow(mycounts)
+```
+
+how many downregulated genes do we have at the common log2 fold change value of -2
+
+how many upregulated genes do we have at the common log2 fold change value of +2
+
+```{r}
+library(dplyr)
+mycountsdown<-mycounts%>%filter(log2fc < -2)
+mycountsdown
+mycountsup<-mycounts%>%filter(log2fc>2)
+mycountsup
+```
+
+We still need to add statistics. DESeq like many bioconductor packages wants our input data in a very specific format
+
+```{r}
+#/message:false
+library(DESeq2)
+dds<-DESeqDataSetFromMatrix(countData = counts,
+                       colData=metadata,
+                       design=~dex)
+dds<-DESeq(dds)
+res<-results(dds)
+res
+```
+
+a common overview figure plots log2 fold change vs pvalue
+
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+abline(v=c(-2,2), col="red")
+abline(h=-log(0.005), col="red")
+```
+
+```{r}
+mycols<-rep("grey", nrow(res))
+mycols[res$log2FoldChange>2]<-"red"
+mycols[res$log2FoldChange< -2]<-"red"
+mycols[res$padj>0.005]<-"grey"
+
+#why is this throwing back an error
+plot(res$log2FoldChange, -log(res$padj), col=mycols)
+abline(v=c(-2,2), col="red")
+abline(h=-log(0.005), col="red")
+```
+
+```{r}
+write.csv(res, file="myresultsclass13.csv")
+```
+
+lets annotate this ish!
+
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+columns(org.Hs.eg.db)
+```
+
+```{r}
+res$entrez <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res), # Our genenames
+                     keytype="ENSEMBL",        # The format of our genenames
+                     column="ENTREZID",          # The new format we want to add
+                     multiVals="first")
+```
+
+```{r}
+library(pathview)
+library(gage)
+library(gageData)
+foldchanges<-res$log2FoldChange
+names(foldchanges)<- res$entrez
+head(foldchanges)
+
+data(kegg.sets.hs)
+
+# Examine the first 2 pathways in this kegg set for humans
+head(kegg.sets.hs, 2)
+```
+
+```{r}
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+attributes(keggres)
+head(keggres$less, 3)
+pathview(gene.data=foldchanges, pathway.id="hsa05310")
+```
+![A pathway figure](hsa05310.pathview.png)
