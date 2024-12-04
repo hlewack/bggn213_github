@@ -1,0 +1,97 @@
+---
+title: "structural_bioinformaticspt1"
+format: pdf
+editor: visual
+---
+
+```{r}
+library(dplyr)
+PDB <- "PDB_Data_bioinformatics.csv"
+PDBstats = read.csv(PDB)
+
+
+#Q1: What percentage of structures in the PDB are solved by X-Ray and Electron Microscopy
+PDBstats
+#removed commas
+totalSUM<-sum(as.numeric(gsub(",","",PDBstats$Total)))
+EMSUM<-sum(as.numeric(gsub(",","",PDBstats$EM)))
+XraySUM<-sum(as.numeric(gsub(",","",PDBstats$X.ray)))
+Q1<-((EMSUM+XraySUM)/totalSUM)*100
+(EMSUM/totalSUM)*100
+(XraySUM/totalSUM)*100
+#answer is 
+#EM:10.2348
+#Xray:83.25592
+#Both:93.49072
+#could also create a function and then do colSums(apply(PDBstats, 2, covert_comma_numbers))
+#convert comma numbers is your function, I didn't include this in my code but it is basically a gsub function
+#could also do this in the tidyverse using the readr library and also read_csv, this will automatically make things numeric
+
+#Q2: What proportion of structures in the PDB are protein?
+totalnocommas<-as.numeric(gsub(",","",PDBstats$Total))
+sum(totalnocommas[1:3])
+#protiens is 221940
+
+#Q3: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+#4563 structures. 
+```
+
+```{r}
+#how to load in an image
+#![my first image from molestar](1HSG.png)
+#![HSG with the asp highlighted](1HSG-2.png)
+#![HSG with water highlighted](1HSG-3.png)
+
+#Q4: Water molecules normally have 3 atoms. Why do we see just one atom per water molecule in this structure?
+#becuase hydrogen is too small to include
+
+#Q5: There is a critical “conserved” water molecule in the binding site. Can you identify this water molecule? What residue number does this water molecule have
+#its water 308
+
+#Q6: Generate and save a figure clearly showing the two distinct chains of HIV-protease along with the ligand. You might also consider showing the catalytic residues ASP 25 in each chain and the critical water (we recommend “Ball & Stick” for these side-chains). Add this figure to your Quarto document
+```
+
+![](1HSG)
+
+![my first image from molestar](1HSG.png)
+
+![HSG with the asp highlighted](1HSG-2.png)\
+![HSG with water highlighted](1HSG-3.png)
+
+##Bio3D package for structural bioinformatics
+
+```{r}
+library(bio3d)
+pdb<-read.pdb("1hsg")
+pdb
+attributes(pdb)
+head(pdb$atom)
+pdbseq(pdb)[25]
+
+#Q7: How many amino acid residues are there in this pdb object?
+#6
+#Q8: Name one of the two non-protein residues? 
+
+#Q9: How many protein chains are in this structure? 
+#1, A
+```
+
+```{r}
+#functional dynamics prediction
+#reading in barry's code
+ adk <- read.pdb("6s36")
+ adk
+#source("https://tinyurl.com/viewpdb")
+ #library(r3dmol)
+ #library(shiny)
+ #view.pdb(pdb, backgroundColor = "pink")
+```
+
+```{r}
+# Perform flexiblity prediction
+modes <- nma(adk)
+#view.pdb(adk, backgroundColor = "pink")
+plot(modes)
+#takes load results and makes pdb file with multiple frames
+mktrj(modes, file="adk.pdb")
+```
