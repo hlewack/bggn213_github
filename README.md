@@ -11,3 +11,4 @@ my classwork from [BGGN213] (https://bioboot.github.io/bggn213_F24/) at UC San D
 - class 12: [Genome informatics](https://github.com/hlewack/bggn213_github/blob/main/class12.qmd)
 - class 13: [RNA sequencing](https://github.com/hlewack/bggn213_github/blob/main/class13RNAseq.qmd)
 - class 14 [RNA seq mini project](https://github.com/hlewack/bggn213_github/blob/main/Class14.qmd)
+- class 15: [whooping cough mini project](https://github.com/hlewack/bggn213_github/blob/main/class15.qmd)
