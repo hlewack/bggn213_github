@@ -7,4 +7,5 @@ my classwork from [BGGN213] (https://bioboot.github.io/bggn213_F24/) at UC San D
 - class 7 [intro to machine learning](https://github.com/hlewack/bggn213_github/blob/main/class7introtomachinelearning.qmd)
 - class 8: [unsupervised machine learning](https://github.com/hlewack/bggn213_github/blob/main/class%208/class8_unsupervisedmachinelearning.qmd)
 - structural biology: [introduction to structural biology](https://github.com/hlewack/bggn213_github/blob/main/structural_bioinformaticspt1_files/structural_bioinformaticspt1.qmd)
+- class 11: [Alpha Fold](https://github.com/hlewack/bggn213_github/blob/main/class11.qmd)
 - class 13: [RNA sequencing](https://github.com/hlewack/bggn213_github/blob/main/class13RNAseq.qmd)
