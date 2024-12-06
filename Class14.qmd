@@ -1,0 +1,145 @@
+---
+title: "class14"
+author: "Hannah Lewack"
+format: pdf
+editor: visual
+---
+
+## RNA seq mini project
+
+two types of data:counts, metadata
+```{r}
+counts<-read.csv("GSE37704_featurecounts.csv", row.names = 1)
+head(counts)
+metadata<-read.csv("GSE37704_metadata.csv")
+head(metadata)
+library(DESeq2)
+```
+
+##data cleanup
+the collumns do not match in both the count data or the meta data so we should remove the length collumn
+```{r}
+colnames(counts)
+metadata$id
+countData <- counts[,-1]
+#function all can be used to check to make sure logical vectors all match between data sets
+all(colnames(countData)==metadata$id)
+```
+##filter out zero counts
+we should remove any genes/transcripts that we have no data for
+```{r}
+tp.keep.inds<-rowSums(countData) > 0
+cleanCounts<-countData[tp.keep.inds,]
+head(cleanCounts)
+```
+
+
+##setup for DEseq
+```{r}
+#/message: false
+dds<-DESeqDataSetFromMatrix(countData = cleanCounts,
+                       colData = metadata,
+                       design = ~condition)
+```
+##DESeq
+```{r}
+dds<-DESeq(dds)
+res<-results(dds)
+```
+
+##Inspect Results
+```{r}
+head(res)
+```
+
+##Data Viz
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+```
+
+##Annotation of genes 
+first I need to translate my ensemble IDs in my res object to entrez and gene symbol formats
+for this I will use the annotationDBI package and its mapIDs function
+lets map symbol, entrezID and gene name from our ensembl
+```{r}
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+columns(org.Hs.eg.db)
+```
+
+```{r}
+res$genename<-mapIds(org.Hs.eg.db, 
+                     keys=rownames(res),
+                     keytype="ENSEMBL",
+                     column = "GENENAME")
+head(res)
+res$symbol<-mapIds(org.Hs.eg.db, 
+                     keys=rownames(res),
+                     keytype="ENSEMBL",
+                     column = "SYMBOL")
+res$entrez<-mapIds(org.Hs.eg.db, 
+                     keys=rownames(res),
+                     keytype="ENSEMBL",
+                     column = "ENTREZID")
+```
+before going any further lets focus on a subset of top hits
+we can use logfoldchange of +/-2 and pvalue of 0.05
+lets save our top genes to a CSV file
+```{r}
+top.inds <- (abs(res$log2FoldChange) > 2) & (res$padj < 0.05)
+top.inds[is.na(top.inds)]<-FALSE
+top.genes<-res[top.inds,]
+write.csv(top.genes, file="myresultsclass14.csv")
+```
+
+##Pathway analysis
+
+```{r}
+library(pathview)
+library(gage)
+library(gageData)
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+```
+
+```{r}
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+head(kegg.sets.hs, 3)
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+head(foldchanges)
+```
+!["kegg pathway analysis"](hsa04110.pathview.png)
+run gage with these values
+```{r}
+# Get the results
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+attributes(keggres)
+# Look at the first few down (less) pathways
+head(keggres$less)
+pathview(gene.data=foldchanges, pathway.id="hsa04110")
+```
+##what about for gene ontology
+```{r}
+data(go.sets.hs)
+data(go.subs.hs)
+
+# Focus on Biological Process subset of GO
+gobpsets = go.sets.hs[go.subs.hs$BP]
+
+gobpres = gage(foldchanges, gsets=gobpsets, same.dir=TRUE)
+
+lapply(gobpres, head)
+head(gobpres$less)
+```
+##reactome analysis
+to run reactome online we need to make a little text file file where we have 1 gene name per-line
+```{r}
+sig_genes <- res[res$padj <= 0.05 & !is.na(res$padj), "symbol"]
+print(paste("Total number of significant genes:", length(sig_genes)))
+write.table(sig_genes, file="significant_genes.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
+```
+!["the cell diagram"](R-HSA-1640170.png)
+
+
+

@@ -1,0 +1,82 @@
+---
+title: "class12"
+author: "Hannah Lewack"
+format: pdf
+editor: visual
+---
+
+## class 12: **Introduction to Genome Informatics Lab** 
+
+Q1: What are those 4 candidate SNPs?
+
+rs12936231, rs8067378, rs9303277, and rs7216389
+
+**Q2**: What three genes do these variants overlap or effect
+
+ZPBP2, IKZF3, GSDMB
+
+**Q3**: What is the location of rs8067378 and what are the different alleles for rs8067378?
+
+Chromosome 17:39895095 (forward strand)\|VCF:17 39895095 rs8067378 A C,G
+
+Q4: Name at least 3 downstream genes for rs8067378?
+
+LRRC3C, GSDMB, ORMDL3
+
+**Q5**: What proportion of the Mexican Ancestry in Los Angeles sample population (MXL) are homozygous for the asthma associated SNP (G\|G)?
+9/64=0.14
+
+**Q6**. Back on the ENSEMBLE page, use the “search for a sample” field above to find the particular sample **HG00109**. This is a male from the GBR population group. What is the genotype for this sample?				G\|G
+
+Q7: How many sequences are there in the first file? What isthe file size and format of the data? Make sure the format isfastqsanger here!
+
+3863 sequences. file size 757kb, 756.3kb. Format fastqsanger		
+
+Q8: What is the GC content and sequence length of the second fastq file?
+
+GC content: 54%, sequence length 50-75
+		
+
+Q9: How about per base sequence quality? Does any base have a mean quality score below 20?
+nope they are all high quality sequences so trimming is not needed
+
+Q10: Where are most the accepted hits located?
+chromosome 17 38,150, far-right
+
+Q11: Following Q10, is there any interesting gene around that area?
+
+PSMD3
+
+Q12: Cufflinks again produces multiple output files that you can inspect from your right-hand-side galaxy history. From the “gene expression” output, what is the FPKM for the ORMDL3gene? What are the other genes with above zero FPKM values?
+
+136853
+
+ZPBP2, GSDMA, GSDMB, PSMD3
+
+Q13: Read this file into R and determine the sample size for each genotype and theircorresponding median expression levels for each of these genotypes.
+
+sample sizes
+A/A A/G G/G 
+108 233 121 
+median values
+A/A	31.24847			
+A/G	25.06486			
+G/G	20.07363	
+
+
+```{r}
+#read in data
+library(dplyr)
+library(ggplot2)
+file<-("https://bioboot.github.io/bggn213_W19/class-material/rs8067378_ENSG00000172057.6.txt")
+genotype<-read.table(file)
+#get summary values of sample size and median
+table(genotype$geno)
+genotype%>%group_by(geno)%>%summarise(med=median(exp))
+#plot as a boxplot
+ggplot(genotype, aes(x=geno, y=exp))+geom_boxplot()
+```
+
+Q14: Generate a boxplot with a box per genotype, what could you infer from the relativeexpression value between A/A and G/G displayed in this plot? Does the SNP effect theexpression of ORMDL3?
+
+g/g is expressed less than A/A, the SNP does affect expression, G/G is associated with the genetic defect therefore when that SNP is present it is expressed at a smaller value perhaps because it is detrimental

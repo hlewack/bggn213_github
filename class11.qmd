@@ -1,0 +1,49 @@
+---
+title: "class11_struc_bioinformatics_2"
+author: "Hannah Lewack"
+format: pdf
+editor: visual
+---
+
+today before diving into structural position w/ alphafold we will finish off the PCA section from the previous lab
+
+```{r}
+library(bio3d)
+id<-"1ake_A"
+aa<-get.seq(id)
+aa
+```
+
+You can add options to executable code like this
+
+```{r}
+b<-blast.pdb(aa)
+attributes(b)
+head(b$hit.tbl)
+hits<-plot(b)
+attributes(hits)
+hits$pdb.id
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+```
+
+I have now found and downloaded all ADK structures but viewing it looks terrible. they need to be aligned and superposed
+
+I am going to install bioCmanager from Cran. Then I can use BiocManager::install() to install bioconductor package
+
+```{r}
+#Align releated PDBs
+pdbs <- pdbaln(files, fit = TRUE, exefile="msa")
+pdbs
+```
+
+to examine in more detail what any PC is capturing we can plot the loadings or make a trajectory of moving along PC1
+
+```{r}
+pc<-pca(pdbs)
+plot(pc)
+plot(pc, pc.axes = c(1:2))
+mktrj(pc, pc=1, file="pc1.pdb")
+ #![visualizing this](PC1.PDB.png)
+```
+
+![visualizing this](PC1.PDB.png)

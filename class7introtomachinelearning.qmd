@@ -1,0 +1,103 @@
+---
+title: 'class7: intro to machine learning'
+format: pdf
+date: "2024-10-23"
+author: "Hannah Lewack (PID A69034788)"
+---
+
+```{r setup, include=FALSE}
+#before we get into clustering methods lets make some sample data to cluster, to help with this I will use the rNorm function
+?rnorm()
+rnorm(5)
+rnorm(15)
+x<-rnorm(150, mean=c(3,-3))
+x
+y<-rev(x)
+y
+z<-cbind(x,y)
+z
+hist(rnorm(150, mean=c(3,-3)))
+#attempt to get it into list form I keep getting an error saying the list is not compatible with doubles
+hist(c(rnorm(1000, mean=3),rnorm(1000, mean=-3) ))
+
+```
+
+```{r kmeans clustering}
+#the function in base r for doing kmeans is kmeans()
+?kmeans()
+km<-kmeans(z, center=2)
+km$cluster
+#plot with clustering result
+plot(z, col=c("red", "blue"))
+plot(z, col=c(1,2))
+km4<-kmeans(z, center=4)
+plot (z, col=km$cluster)
+plot(km$centers, col="blue", pch=15, cex=2)
+#can you cluster our data z into four clusters, k means is self fufilling prophecy
+plot(km4$centers, col="blue", pch=15, cex=2)
+```
+
+```{r hierarchical clustering}
+#the main function for hierarchical clustering in base r is called 'hclust()'
+#unlike kmeans I cannot pass in my data as an impotut I need a distance matrix from my data
+
+d<-dist(z)
+hc<-hclust(d)
+plot(hc)
+abline(h=10, col="red")
+#to get my main clustering result(i.e. the membership vector) I can "cut" my tree at a given height. To do this I will use 'cuttree()'
+grps<-cutree(hc, h=10)
+grps
+```
+
+```{r starting in class work}
+#read in data
+url <- "https://tinyurl.com/UK-foods"
+x <- read.csv(url)
+nrow(x)
+ncol(x)
+#rownames(x) <- x[,1]
+#x <- x[,-1]
+x <- read.csv(url, row.names=1)
+head(x)
+#Which approach to solving the ‘row-names problem’ mentioned above do you prefer and why? Is one approach more robust than another under certain circumstances?
+#I prefer the latter because I tried to run the first one multiple times and if I didn't reload the code it would delete a different collumn everytime I ran it
+```
+
+
+```{r starting in class work2}
+barplot(as.matrix(x), beside=T, col=rainbow(nrow(x)))
+
+#Q3: Changing what optional argument in the above barplot() function results in the following plot?
+#if you change the beside arguement it stacks them
+
+#Q5: Generating all pairwise plots may help somewhat. Can you make sense of the following code and resulting figure? What does it mean if a given point lies on the diagonal for a given plot?
+pairs(x, col=rainbow(10), pch=16)
+#pairwise comparison colored with rainbow with point size of 16, it means that it falls within the expected value of both comparisons
+
+#Q6. What is the main differences between N. Ireland and the other countries of the UK in terms of this data-set?
+#it falls a bit outside of the expected value but still relatively looks similar to an r^2 of 1
+```
+
+
+```{r starting in class work3}
+pca <- prcomp( t(x) )
+summary(pca)
+attributes(pca)
+
+#Q7. Complete the code below to generate a plot of PC1 vs PC2. The second line adds text labels over the data points.
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2",
+text(pca$x[,1], pca$x[,2], colnames(x)))
+
+#Q8. Customize your plot so that the colors of the country names match the colors in our UK and Ireland map and table at start of this document.
+
+plot(pca$x[,1], pca$x[,2], xlab="PC1 (67.4%)", ylab="PC2 (29%)", col=c("black","red", "blue","green"), pch=16)
+#the main function to do PCR in baseR is called prcomp()
+
+v <- round( pca$sdev^2/sum(pca$sdev^2) * 100 )
+v
+z <- summary(pca)
+barplot(v, xlab="Principal Component", ylab="Percent Variation")
+par(mar=c(10, 3, 0.35, 0))
+barplot( pca$rotation[,1], las=2 )
+```

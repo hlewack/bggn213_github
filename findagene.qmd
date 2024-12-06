@@ -1,0 +1,53 @@
+---
+title: "findagene"
+format: html
+editor: visual
+---
+
+## generate a heatmap
+
+```{r}
+library(bio3d)
+IGF<-read.fasta("IGFRsequence-2.fasta")
+brucei<-read.fasta("Trypanosoma_brucei_sequence-2.fasta")
+congolense<-read.fasta("Trypanosoma_congolense_sequence-2.fasta")
+melophagium<-read.fasta("Trypanosoma_melophagium_sequence-2.fasta")
+rangeli<-read.fasta("Trypanosoma_rangeli_sequence-2.fasta")
+theileri<-read.fasta("Trypanosoma_theileri_sequence-2.fasta")
+```
+
+```{r}
+library(reshape2)
+library(ggplot2)
+percidentity<-read.csv("percidentitymatrix.csv", row.names = 1)
+percidentity
+data_long <- melt(as.matrix(percidentity))
+data_long
+```
+
+```{r}
+heatmap <- ggplot(data_long, aes(x = Var2, y = Var1, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "blue", high = "red", name = "Percent Identity") +
+  labs(title = "Heatmap of Percent Identities", x = "Columns", y = "Rows") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10),
+        plot.title = element_text(size = 16, hjust = 0.5))
+
+# Display the heatmap
+print(heatmap)
+```
+
+# what protein structures are the most similar
+```{r}
+combined<-read.fasta("combined.fasta")
+combined_consensus<-consensus(combined)
+blast.pdb(combined_consensus)
+pdb_unique<-blast.pdb(IGF)
+protien1<-read.pdb("7PG0")
+protien1
+pdb.annotate(protien1)
+pdb.annotate(pdb_unique$subjectids)
+```
+

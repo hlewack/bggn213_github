@@ -1,0 +1,201 @@
+---
+title: "class05dataVIZmarkdown"
+format: pdf
+author: "Hannah Lewack"
+date: "2024-10-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r addition}
+1+1
+```
+#/echo: false
+```{r}
+2*2
+```
+
+```{r plotting}
+plot(1:50)
+```
+R has lots of ways to make figures and graphs in particular. One that comes with R out of the box is called **"base" R**- the 'plot()' function
+a very popular package in this area is called **ggplot2**
+before I can use any add on package I must install it with the 'install.packages("ggplot2")' command/function
+then to use the package I need to load it with 'library(ggplot2)'
+for "simple" plots like this one, baseR will be much shorter than ggplot code
+```{r intro to ggplot}
+cars
+plot(cars)
+library(ggplot2)
+ggplot(cars)
+ggplot(cars)+ aes(x=speed, y=dist) + geom_point()
+```
+every ggplot has three layers, the first layer is the **data** (data.frane with the numbers or stuff you want to plot), the second is **aes**thetics (mapping of collumns onto dataframe to plot), the third is **geoms**(there are tons of these the basics are 'geom_point', 'geom_line', 'geom_col')
+```{r addiing layers}
+ggplot(cars)+ aes(x=speed, y=dist) + geom_point()+geom_line()+geom_smooth()
+```
+make a ggplot using mpg and displacement, set size to hp and color to am
+```{r more complicated graphs}
+mtcars
+ggplot(mtcars, aes(x=mpg, y=disp))+geom_point()
+ggplot(mtcars, aes(x=mpg, y=disp,size=hp))+geom_point()
+ggplot(mtcars, aes(x=mpg, y=disp, size=hp, color=am))+geom_point()
+```
+
+```{r}
+library(ggrepel)
+ggplot(mtcars, aes(x=mpg, y=disp, size=hp))+geom_point(color="blue")+facet_wrap(~am)
+```
+```{r Adding more plot aesthetics through aes()}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+nrow(genes)
+colnames(genes)
+table(genes$State)
+127/5196
+
+ggplot(genes) + 
+    aes(x=Condition1, y=Condition2)+ geom_point()
+p <- ggplot(genes) + 
+    aes(x=Condition1, y=Condition2, col=State) +
+    geom_point()
+p + scale_colour_manual( values=c("blue","gray","red") )
+p+scale_colour_manual( values=c("blue","gray","red") )+ labs(title="Gene Expresion Changes Upon Drug Treatment", x="Control (no drug)", y="Drug Treatment")
+```
+
+```{r going further}
+url <- "https://raw.githubusercontent.com/jennybc/gapminder/master/inst/extdata/gapminder.tsv"
+gapminder <- read.delim(url)
+library(dplyr)
+#first basic scatterplot
+gapminder_2007 <- gapminder %>% filter(year==2007)
+ggplot(gapminder_2007) + aes(x=gdpPercap, y=lifeExp) +
+  geom_point()
+#make points transparent
+ggplot(gapminder_2007) +
+  aes(x=gdpPercap, y=lifeExp) +
+  geom_point(alpha=0.5)
+#plot that contains four variables
+ggplot(gapminder_2007) +
+  aes(x=gdpPercap, y=lifeExp, color=continent, size=pop) +
+  geom_point(alpha=0.5)
+#color values by numeric population
+ggplot(gapminder_2007) + 
+  aes(x = gdpPercap, y = lifeExp, color = pop) +
+  geom_point(alpha=0.8)
+#adjust point size based on the size of the country
+ggplot(gapminder_2007) + 
+  aes(x = gdpPercap, y = lifeExp, size = pop) +
+  geom_point(alpha=0.5)
+ggplot(gapminder_2007) + 
+  geom_point(aes(x = gdpPercap, y = lifeExp,
+                 size = pop), alpha=0.5) + 
+  scale_size_area(max_size = 10)
+#Can you adapt the code you have learned thus far to reproduce our gapminder scatter plot for the year 1957? What do you notice about this plot is it easy to compare with the one for 2007?
+gapminder_1957 <- gapminder %>% filter(year==1957)
+ggplot(gapminder_1957) + 
+  geom_point(aes(x = gdpPercap, y = lifeExp,
+                 size = pop, color=continent), alpha=0.7) + 
+  scale_size_area(max_size = 15)
+#comparing the two
+gapminder_1957 <- gapminder %>% filter(year==1957 | year==2007)
+
+ggplot(gapminder_1957) + 
+  geom_point(aes(x = gdpPercap, y = lifeExp, color=continent,
+                 size = pop), alpha=0.7) + 
+  scale_size_area(max_size = 10) +
+  facet_wrap(~year)
+#life expectancy and GDP are much higher in 2007
+```
+```{r barcharts}
+#the number of people (in millions) in the five biggest countries by population in 2007:
+gapminder_top5 <- gapminder %>% 
+  filter(year==2007) %>% 
+  arrange(desc(pop)) %>% 
+  top_n(5, pop)
+gapminder_top5
+ggplot(gapminder_top5) + 
+  geom_col(aes(x = country, y = pop))
+#the life expectancy of people (in millions) in the five biggest countries by population in 2007:
+gapminder_top5 <- gapminder %>% 
+  filter(year==2007) %>% 
+  arrange(desc(pop)) %>% 
+  top_n(5, pop)
+gapminder_top5
+ggplot(gapminder_top5) + 
+  geom_col(aes(x = country, y = lifeExp))
+#filling bar with color(catagorical)
+ggplot(gapminder_top5) + 
+  geom_col(aes(x = country, y = pop, fill = continent))
+#filling bar with color(numerical)
+ggplot(gapminder_top5) + 
+  geom_col(aes(x = country, y = pop, fill = lifeExp))
+#Plot population size by country. Create a bar chart showing the population (in millions) of the five biggest countries by population in 2007.
+ggplot(gapminder_top5) +
+  aes(x=country, y=pop, fill=gdpPercap) +
+  geom_col()
+#change order of bars
+ggplot(gapminder_top5) +
+  aes(x=reorder(country, -pop), y=pop, fill=gdpPercap) +
+  geom_col()
+#fill by country
+ggplot(gapminder_top5) +
+  aes(x=reorder(country, -pop), y=pop, fill=country) +
+  geom_col(col="gray30") +
+  guides(fill="none")
+```
+```{r flipping bar charts}
+#In some circumstances it might be useful to rotate (or “flip”) your plots to enable a more clear visualization. 
+head(USArrests)
+USArrests$State <- rownames(USArrests)
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_col() +
+  coord_flip()
+
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_point() +
+  geom_segment(aes(x=State, 
+                   xend=State, 
+                   y=0, 
+                   yend=Murder), color="blue") +
+  coord_flip()
+```
+
+```{r animations}
+library(gapminder)
+library(gganimate)
+
+# Setup nice regular ggplot of the gapminder data
+ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  # Facet by continent
+  facet_wrap(~continent) +
+  # Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_time(year) +
+  shadow_wake(wake_length = 0.1, alpha = FALSE)
+#combining plots
+library(patchwork)
+
+# Setup some example plots 
+p1 <- ggplot(mtcars) + geom_point(aes(mpg, disp))
+p2 <- ggplot(mtcars) + geom_boxplot(aes(gear, disp, group = gear))
+p3 <- ggplot(mtcars) + geom_smooth(aes(disp, qsec))
+p4 <- ggplot(mtcars) + geom_bar(aes(carb))
+
+# Use patchwork to combine them here:
+(p1 | p2 | p3) /
+      p4
+```
+
+
+
+
